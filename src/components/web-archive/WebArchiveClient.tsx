@@ -5,8 +5,8 @@ import { archiveWebsiteAction, type ArchiveState } from "@/app/actions/archiveAc
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Archive, Frown, ListChecks, FileText, CheckCircle2 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
-import { useFormState } from "react-dom";
+import React, { useEffect, useRef, useState, useActionState } from "react";
+// useFormState was previously imported from 'react-dom', now useActionState is from 'react'
 import { CompletenessReport } from "./CompletenessReport";
 import { ErrorReport } from "./ErrorReport";
 import { ProgressDisplay } from "./ProgressDisplay";
@@ -15,30 +15,25 @@ import { UrlInputForm } from "./UrlInputForm";
 const initialArchiveState: ArchiveState = { status: 'idle' };
 
 export function WebArchiveClient() {
-  const [state, formAction] = useFormState(archiveWebsiteAction, initialArchiveState);
+  const [state, formAction] = useActionState(archiveWebsiteAction, initialArchiveState);
   
   const formRef = useRef<HTMLFormElement>(null);
-  const [isProcessing, setIsProcessing] = useState(false); // Derived from form pending state
+  const [isProcessing, setIsProcessing] = useState(false); 
   const [currentStatusMessage, setCurrentStatusMessage] = useState("Enter a URL to begin archiving.");
 
-  // This effect listens to the `pending` state which comes from useFormStatus inside UrlInputForm's SubmitButton
-  // To correctly get pending status here, we need to know when the form is submitting.
-  // A simple way: when formAction is called, set local pending state.
-  // More robust: useFormStatus can be used in a component that is a child of the form.
-  // We'll manage `isProcessing` based on form submission start and server action completion.
 
   const wrappedFormAction = async (formData: FormData) => {
     setIsProcessing(true);
     setCurrentStatusMessage("Initializing archiving process...");
-    await formAction(formData); // Calls the actual server action
-    // isProcessing will be set to false via useEffect watching `state`
+    // @ts-ignore TODO: figure out the correct type for formAction with useActionState
+    await formAction(formData); 
   };
 
 
   useEffect(() => {
     if (state.status === 'success' || state.status === 'error') {
-      setIsProcessing(false); // Action finished
-      if (state.formKey) { // Reset form if key is present (indicates completion/error needing reset)
+      setIsProcessing(false); 
+      if (state.formKey) { 
         formRef.current?.reset();
       }
     }
